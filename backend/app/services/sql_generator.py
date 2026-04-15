@@ -3,54 +3,74 @@ import re
 import os
 
 OLLAMA_URL = os.getenv("OLLAMA_URL")
-MODEL_NAME = os.getenv("MODEL_NAME")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5-coder:7b")
 
+# ⚡ Cache for repeated queries
+cache = {}
+
+# -------------------------------
+# 🔍 Extract SQL safely
+# -------------------------------
 def extract_sql(text):
-    """
-    Extract first SQL query from LLM response
-    """
-    # Remove markdown
     text = text.replace("```sql", "").replace("```", "").strip()
-
-    # Remove prefixes
     text = text.replace("SQL:", "").replace("sql:", "").strip()
 
-    # 🔥 Extract SQL using regex (IMPORTANT)
+    # Extract SELECT query
     match = re.search(r"(SELECT .*?;)", text, re.IGNORECASE | re.DOTALL)
 
     if match:
         return match.group(1).strip()
 
+    # fallback
+    if "SELECT" in text:
+        return text[text.find("SELECT"):].strip()
+
     return text.strip()
 
 
+# -------------------------------
+# 🛡️ SQL Safety Validator
+# -------------------------------
+def validate_sql(query):
+    forbidden = ["drop", "delete", "update", "insert", "alter", "truncate"]
+
+    q = query.lower()
+    for word in forbidden:
+        if word in q:
+            raise Exception("❌ Dangerous query blocked!")
+
+    return query
+
+
+# -------------------------------
+# 🧠 Generate SQL
+# -------------------------------
 def generate_sql(question, schema):
 
+    # ⚡ Cache check
+    if question in cache:
+        print("⚡ Cache hit")
+        return cache[question]
+
+    # 🔥 Optimized prompt (coder-friendly)
     prompt = f"""
-You are a PostgreSQL expert.
+You are an expert PostgreSQL SQL generator.
 
-Database schema:
-{schema}
-
-STRICT RULES:
+Rules:
 - Return ONLY SQL query
-- NO explanation
-- NO text before or after SQL
-- NO markdown
-- Use only given tables
+- No explanation
+- No markdown
+- Only valid PostgreSQL syntax
+- Use only given table
 
-Examples:
+Table:
+employee_records({schema})
 
-Q: Show all employees
-SELECT * FROM employee_records;
+Important:
+- For top N → use ORDER BY + LIMIT
+- For top N per group → use ROW_NUMBER()
 
-Q: Show top 3 salaries
-SELECT * FROM employee_records ORDER BY salary DESC LIMIT 3;
-
-Q: Average salary
-SELECT AVG(salary) FROM employee_records;
-
-Now convert:
+Question:
 {question}
 """
 
@@ -58,7 +78,7 @@ Now convert:
         response = requests.post(
             OLLAMA_URL,
             json={
-                "model": "qwen:7b",
+                "model": MODEL_NAME,
                 "prompt": prompt,
                 "stream": False
             }
@@ -66,10 +86,18 @@ Now convert:
 
         raw_output = response.json()["response"]
 
-        # 🔥 Extract clean SQL
-        clean_sql = extract_sql(raw_output)
+        print("🧠 RAW OUTPUT:\n", raw_output)
 
-        return clean_sql
+        # 🔍 Extract SQL
+        sql_query = extract_sql(raw_output)
+
+        # 🛡️ Validate SQL
+        sql_query = validate_sql(sql_query)
+
+        # ⚡ Save to cache
+        cache[question] = sql_query
+
+        return sql_query
 
     except Exception as e:
         return f"ERROR: {str(e)}"

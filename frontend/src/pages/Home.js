@@ -16,8 +16,8 @@ export default function Home() {
 
                 {/* Toggle button */}
                 <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="absolute left-4 top-4 text-green-400"
+                    onClick={() => setSidebarOpen(true)}
+                    className="absolute left-4 top-4 text-green-400 text-2xl hover:scale-110"
                 >
                     ☰
                 </button>

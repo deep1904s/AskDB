@@ -4,7 +4,7 @@
 
 **Query your databases using plain English. Upload a CSV, ask questions, get instant SQL + results.**
 
-`React` · `FastAPI` · `PostgreSQL` · `Redis` · `Ollama` · `Docker`
+`React` · `FastAPI` · `PostgreSQL` · `Redis` · `Local AI Inference` · `Docker`
 
 </div>
 
@@ -14,7 +14,7 @@
 
 AskDB is a production-ready, full-stack AI system that lets users interact with structured data using natural language. It translates English questions into SQL queries, executes them against a PostgreSQL database, and returns results with detailed AI-generated explanations.
 
-The system features a **ChatGPT-style interface** with a dark neon theme, persistent chat history, intelligent intent classification, and a complete Docker deployment setup.
+The system features a **ChatBot-style interface** with a dark neon theme, persistent chat history, intelligent intent classification, and a complete Docker deployment setup.
 
 ---
 
@@ -41,18 +41,16 @@ The system features a **ChatGPT-style interface** with a dark neon theme, persis
 - **Schema Enforcement** — Validates SQL columns against actual database schema
 
 ### 🎨 Premium UI (ChatGPT-Style)
-- **Dark Theme** — `#0a0a0a` background with `#c8ff00` neon greenish-yellow accent
+- **Dark Theme** — Clean dark theme with accent highlights
 - **Collapsible Sidebar** — Conversation history, dataset upload, branding
 - **Chat Bubbles** — User/AI avatars, timestamps, fade-in animations
 - **Typing Indicator** — Animated neon dots while AI processes
 - **Welcome Screen** — Feature cards and suggested query examples
 - **Inline Results** — SQL code blocks (with copy), styled data tables (with CSV download)
 - **Auto-expanding Input** — Textarea with keyboard shortcut hints
-
 ---
 
 ## 🏗️ Architecture
-
 ```
 ┌─────────────────────────────────────────────────────┐
 │                    Frontend (React)                  │
@@ -85,7 +83,6 @@ The system features a **ChatGPT-style interface** with a dark neon theme, persis
 ```
 
 ---
-
 ## 📁 Project Structure
 
 ```
@@ -142,7 +139,7 @@ AskDB/
 ### Prerequisites
 
 - **Docker & Docker Compose** (for containerized deployment)
-- **Ollama** with a model pulled (e.g., `ollama pull qwen2.5-coder:7b`)
+- **Ollama** with a model pulled (e.g., `ollama pull <model_name>`)
 
 ### Option 1: Docker Compose (Recommended)
 
@@ -151,8 +148,7 @@ AskDB/
 git clone https://github.com/deep1904s/AskDB.git
 cd AskDB
 
-# Make sure Ollama is running locally
-ollama serve
+Ensure the AI inference service is running.
 
 # Start all services
 docker compose up --build
@@ -180,8 +176,6 @@ cd frontend
 npm install
 npm start
 
-# 4. Make sure Ollama is running
-ollama serve
 ```
 
 ---
@@ -191,9 +185,9 @@ ollama serve
 Create `backend/.env`:
 
 ```env
-DATABASE_URL=postgresql://deepak:password@localhost:5432/mindsql_db
+DATABASE_URL=postgresql://<username>:<password>@localhost:5432/<db_name>
 OLLAMA_URL=http://localhost:11434/api/generate
-MODEL_NAME=qwen2.5-coder:7b
+MODEL_NAME=<model_name>
 ```
 
 > When using Docker Compose, these are set automatically in `docker-compose.yml`.
@@ -242,7 +236,7 @@ User Message → Intent Classifier
 |---------|---------------|
 | **Redis Caching** | Table-scoped query cache with 5-min TTL |
 | **Cache Invalidation** | Auto-flush on new dataset upload |
-| **Rate Limiting** | 5 req/min per IP via SlowAPI |
+| **Rate Limiting** | 5-10 req/min per IP via SlowAPI |
 | **Async Backend** | FastAPI with async endpoints |
 | **LLM Timeouts** | 15-60s timeouts with smart fallbacks |
 | **Context Limiting** | Max 20 rows stored for follow-ups |
@@ -255,7 +249,6 @@ User Message → Intent Classifier
 - **Schema enforcement** — AI-generated SQL is validated against actual column names
 - **Rate limiting** — Prevents API abuse
 - **CORS configured** — Controlled cross-origin access
-- **No model identity leakage** — LLM never reveals its underlying model
 
 ---
 

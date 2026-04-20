@@ -1,7 +1,9 @@
 import redis
+import os
 
-# Connect Redis
-r = redis.Redis(host='localhost', port=6379, db=0)
+# Connect Redis using environment variable (defaults to localhost for local dev)
+redis_host = os.getenv("REDIS_HOST", "localhost")
+r = redis.Redis(host=redis_host, port=6379, db=0)
 
 def get_cache(key):
     value = r.get(key)

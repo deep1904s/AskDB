@@ -1,288 +1,291 @@
-# 🚀 AskDB AI — Natural Language to SQL Query System
+# 🚀 AskDB — AI-Powered Natural Language to SQL System
 
-## 📌 Introduction
+<div align="center">
 
-AskDB is a full-stack AI-powered system designed to bridge the gap between non-technical users and structured data stored in relational databases. It enables users to query datasets using natural language and automatically translates these queries into executable SQL statements.
+**Query your databases using plain English. Upload a CSV, ask questions, get instant SQL + results.**
 
-Unlike traditional query interfaces, AskDB integrates a locally hosted AI inference layer with a robust backend pipeline to ensure accurate, safe, and efficient query generation. The system is built with a focus on scalability, performance optimization, and production readiness ⚙️.
+`React` · `FastAPI` · `PostgreSQL` · `Redis` · `Ollama` · `Docker`
 
----
-
-## ❓ Problem Statement
-
-Accessing and analyzing structured data typically requires knowledge of SQL, which creates a barrier for non-technical stakeholders such as business analysts, managers, and domain experts.
-
-The goal of AskDB is to:
-
-* Eliminate the need for manual SQL writing ✍️
-* Enable natural language interaction with databases 💬
-* Maintain correctness, safety, and efficiency of generated queries 🛡️
+</div>
 
 ---
 
-## 🧠 System Overview
+## 📌 Overview
 
-AskDB follows a modular architecture where each component is responsible for a specific stage in the query lifecycle:
+AskDB is a production-ready, full-stack AI system that lets users interact with structured data using natural language. It translates English questions into SQL queries, executes them against a PostgreSQL database, and returns results with detailed AI-generated explanations.
 
-1. User submits a natural language query via the frontend
-2. Backend receives and processes the request
-3. Schema information is dynamically extracted from the uploaded dataset
-4. A structured prompt is constructed and sent to a local AI inference engine
-5. The generated SQL is validated and sanitized
-6. The query is executed against the database
-7. Results are returned and rendered in the frontend 📊
+The system features a **ChatGPT-style interface** with a dark neon theme, persistent chat history, intelligent intent classification, and a complete Docker deployment setup.
+
+---
+
+## ✨ Key Features
+
+### 🤖 Intelligent Chat System
+- **Intent Classification** — Automatically detects if a message is a general question, data query, or follow-up analytics request
+- **General Chat** — Responds conversationally to greetings, help requests, and general questions using the LLM
+- **SQL Generation** — Converts natural language to PostgreSQL-compatible SQL queries
+- **Follow-up Analytics** — Analyzes previous query results when asked (e.g., "summarize the above results")
+- **Result Explanations** — Auto-generates detailed analytical explanations alongside query results
+
+### 🗄️ Dynamic Data Pipeline
+- **CSV Upload** — Drag-and-drop CSV upload, auto-ingested into PostgreSQL
+- **Dynamic Table Routing** — Always queries the most recently uploaded dataset (no hardcoded table names)
+- **Schema-Aware Prompting** — Extracts column names and types, sends to LLM for accurate SQL generation
+- **Context Tracking** — Stores last query results for intelligent follow-up conversations
+
+### 🛡️ Safety & Performance
+- **SQL Validation** — Blocks dangerous operations (DROP, DELETE, UPDATE, INSERT, ALTER, TRUNCATE)
+- **Redis Caching** — Caches generated SQL queries with table-scoped keys (5-min TTL)
+- **Cache Invalidation** — Auto-clears cache on new dataset uploads
+- **Rate Limiting** — 5 requests/minute per client via SlowAPI
+- **Schema Enforcement** — Validates SQL columns against actual database schema
+
+### 🎨 Premium UI (ChatGPT-Style)
+- **Dark Theme** — `#0a0a0a` background with `#c8ff00` neon greenish-yellow accent
+- **Collapsible Sidebar** — Conversation history, dataset upload, branding
+- **Chat Bubbles** — User/AI avatars, timestamps, fade-in animations
+- **Typing Indicator** — Animated neon dots while AI processes
+- **Welcome Screen** — Feature cards and suggested query examples
+- **Inline Results** — SQL code blocks (with copy), styled data tables (with CSV download)
+- **Auto-expanding Input** — Textarea with keyboard shortcut hints
 
 ---
 
 ## 🏗️ Architecture
 
-```text
-Frontend (React + Tailwind)
-        ↓
-FastAPI Backend
-        ↓
-Rate Limiting Layer
-        ↓
-Caching Layer ⚡
-        ↓
-AI Query Generator
-        ↓
-SQL Validator & Schema Enforcement
-        ↓
-Relational Database 🗄️
-        ↓
-Response to Frontend
+```
+┌─────────────────────────────────────────────────────┐
+│                    Frontend (React)                  │
+│        ChatGPT-style UI · Dark Neon Theme            │
+└──────────────────────┬──────────────────────────────┘
+                       │ HTTP
+┌──────────────────────▼──────────────────────────────┐
+│               FastAPI Backend                        │
+│  ┌────────────┐ ┌──────────┐ ┌───────────────────┐  │
+│  │Rate Limiter│ │  Router  │ │ Intent Classifier │  │
+│  └────────────┘ └────┬─────┘ └─────────┬─────────┘  │
+│                      │                 │             │
+│         ┌────────────┼─────────────────┤             │
+│         ▼            ▼                 ▼             │
+│  ┌──────────┐ ┌──────────┐   ┌──────────────────┐   │
+│  │  Redis   │ │   SQL    │   │  Chat / Analytics │   │
+│  │  Cache   │ │Generator │   │    Service        │   │
+│  └──────────┘ └────┬─────┘   └──────────────────┘   │
+│                    │                                 │
+│              ┌─────▼──────┐                          │
+│              │ SQL Safety │                          │
+│              │ Validator  │                          │
+│              └─────┬──────┘                          │
+│                    │                                 │
+│              ┌─────▼──────┐     ┌────────────────┐   │
+│              │ PostgreSQL │     │  Ollama (LLM)  │   │
+│              │  Database  │     │  Local Model   │   │
+│              └────────────┘     └────────────────┘   │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ⚙️ Core Components
+## 📁 Project Structure
 
-### 🎨 Frontend
-
-The frontend is built using React and Tailwind CSS. It provides a modern, interactive interface inspired by conversational AI systems.
-
-**Key features:**
-
-* Centralized query input (chat-style UI 💬)
-* Sidebar-based dataset upload 📂
-* Real-time loading indicators ⏳
-* Chat history tracking 🧾
-* Result visualization (table format 📊)
-* Export functionality (CSV download ⬇️)
-* SQL visibility with copy support 📋
-
----
-
-### ⚡ Backend
-
-The backend acts as the orchestration layer. It handles:
-
-* API routing
-* File uploads
-* Schema extraction
-* Query generation
-* Database interaction
-* Error handling
-
-It is designed to be modular and extensible, allowing easy integration with different AI providers or database systems.
-
----
-
-### 🧠 SQL Generation Engine
-
-The SQL generation pipeline is powered by a local AI inference engine.
-
-#### 🔹 Prompt Engineering
-
-The system constructs a structured prompt containing:
-
-* Table schema
-* Explicit constraints (no hallucination, strict syntax)
-* Query intent
-
-This ensures:
-
-* High accuracy ✅
-* Reduced ambiguity
-* Controlled output format
+```
+AskDB/
+├── docker-compose.yml          # Full stack deployment
+├── .gitignore
+├── README.md
+│
+├── frontend/                   # React + Tailwind CSS
+│   ├── Dockerfile
+│   ├── nginx.conf              # Production nginx config
+│   ├── package.json
+│   ├── tailwind.config.js      # Custom neon theme
+│   ├── public/
+│   │   └── index.html          # SEO-optimized HTML
+│   └── src/
+│       ├── index.js
+│       ├── index.css            # Design system (animations, glow effects)
+│       ├── App.js               # Main layout + state management
+│       ├── services/
+│       │   └── api.js           # Axios API client
+│       └── components/
+│           ├── Sidebar.js       # Collapsible sidebar with history + upload
+│           ├── ChatInput.js     # Auto-expanding textarea
+│           ├── Message.js       # Chat bubbles with SQL + table rendering
+│           ├── WelcomeScreen.js # Landing screen with suggestions
+│           ├── TypingIndicator.js # Animated loading dots
+│           └── UploadPanel.js   # Drag-and-drop CSV upload
+│
+└── backend/                    # FastAPI + Python
+    ├── Dockerfile
+    ├── requirements.txt
+    ├── .env                    # Environment variables
+    └── app/
+        ├── main.py             # FastAPI app + middleware
+        ├── database.py         # SQLAlchemy engine
+        ├── core/
+        │   └── limiter.py      # Rate limiting config
+        ├── routes/
+        │   ├── upload.py       # CSV upload → PostgreSQL
+        │   └── query.py        # Intent routing + query execution
+        └── services/
+            ├── active_table.py    # Tracks active dataset + context
+            ├── cache.py           # Redis caching layer
+            ├── chat_service.py    # Intent classifier + LLM chat/analytics
+            ├── schema_service.py  # Dynamic schema extraction
+            └── sql_generator.py   # LLM-powered SQL generation
+```
 
 ---
 
-### 🔍 Extraction Layer
+## 🚀 Quick Start
 
-The raw AI output is processed to extract valid SQL. Special care is taken to:
+### Prerequisites
 
-* Preserve Common Table Expressions (CTEs)
-* Handle multiline queries
-* Remove formatting artifacts
+- **Docker & Docker Compose** (for containerized deployment)
+- **Ollama** with a model pulled (e.g., `ollama pull qwen2.5-coder:7b`)
 
----
+### Option 1: Docker Compose (Recommended)
 
-### 🧬 Schema Awareness
+```bash
+# Clone the repo
+git clone https://github.com/deep1904s/AskDB.git
+cd AskDB
 
-A key feature of the system is dynamic schema handling.
+# Make sure Ollama is running locally
+ollama serve
 
-* Schema is extracted from uploaded CSV files
-* Column names are passed to the AI engine
-* SQL generation is restricted to available columns
+# Start all services
+docker compose up --build
 
-This prevents:
+# Access the app
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8000
+```
 
-* Invalid column references ❌
-* Hardcoded assumptions
-* Dataset-specific failures
+### Option 2: Manual Setup
 
----
+```bash
+# 1. Start PostgreSQL & Redis (or use Docker for just these)
+docker compose up postgres redis -d
 
-### 🛡️ SQL Validation
+# 2. Backend
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 
-Before execution, queries are validated to prevent unsafe operations.
+# 3. Frontend
+cd frontend
+npm install
+npm start
 
-**Blocked operations include:**
-
-* DROP
-* DELETE
-* UPDATE
-* INSERT
-* ALTER
-
-This ensures that the system remains **read-only and safe for production use** 🔒.
-
----
-
-### ⚡ Caching Layer
-
-A caching mechanism is integrated to optimize performance.
-
-**Workflow:**
-
-* User query is checked against cache
-* If found → return cached SQL instantly ⚡
-* If not → generate via AI and store in cache
-
-**Benefits:**
-
-* Reduced compute overhead
-* Faster response times
-* Improved scalability
+# 4. Make sure Ollama is running
+ollama serve
+```
 
 ---
 
-### 🚫 Rate Limiting
+## ⚙️ Environment Variables
 
-Rate limiting is implemented to prevent abuse and ensure system stability.
+Create `backend/.env`:
 
-* Limits number of requests per client
-* Protects backend from overload
-* Ensures fair usage
+```env
+DATABASE_URL=postgresql://deepak:password@localhost:5432/mindsql_db
+OLLAMA_URL=http://localhost:11434/api/generate
+MODEL_NAME=qwen2.5-coder:7b
+```
 
----
-
-### 🗄️ Database Layer
-
-The system uses a relational database with an ORM for execution.
-
-* Dynamic query execution
-* Result conversion into JSON
-* Safe interaction through controlled queries
+> When using Docker Compose, these are set automatically in `docker-compose.yml`.
 
 ---
 
-## 🔄 Workflow
+## 🔄 How It Works
 
-1. User uploads dataset (CSV) 📂
-2. Schema is extracted and stored
-3. User submits query in natural language 💬
-4. System checks cache ⚡
-5. If not cached:
+### Request Flow
 
-   * Prompt is sent to AI engine
-   * SQL is generated and extracted
-   * SQL is validated
-6. Query is executed on database
-7. Results are returned and displayed 📊
-8. SQL is cached for future use
+```
+User Message → Intent Classifier
+    │
+    ├── "Hello" → General Chat → LLM Response
+    │
+    ├── "Show top 5 salaries" → Data Query Pipeline:
+    │       → Check Redis Cache
+    │       → Get Active Table Schema
+    │       → Generate SQL via LLM
+    │       → Validate SQL (safety + schema)
+    │       → Execute on PostgreSQL
+    │       → Generate Explanation via LLM
+    │       → Return: SQL + Results + Explanation
+    │       → Cache SQL in Redis
+    │       → Save Context for Follow-ups
+    │
+    └── "Summarize the above results" → Follow-up Analytics:
+            → Retrieve Last Query Context
+            → Send Results + Question to LLM
+            → Return Analytical Response
+```
 
----
+### Intent Classification
 
-## ⚡ Performance Considerations
-
-* Local inference reduces external dependency latency 🌐
-* Caching minimizes repeated computation
-* Asynchronous backend improves throughput
-* Rate limiting ensures stability under load
-
----
-
-## ⚠️ Challenges and Solutions
-
-### 1️⃣ AI Hallucination
-
-**Solution:**
-
-* Strict prompt constraints
-* Schema enforcement
-* Post-generation validation
+| Intent | Trigger Examples | Action |
+|--------|-----------------|--------|
+| `general_chat` | "Hi", "What can you do?", "Explain SQL" | LLM conversational response |
+| `data_query` | "Show all records", "Top 5 by salary" | SQL generation + execution |
+| `follow_up_analytics` | "Summarize this", "Which is highest?" | Analyze previous results via LLM |
 
 ---
 
-### 2️⃣ Dynamic Schema Handling
+## ⚡ Performance Features
 
-**Solution:**
-
-* Runtime schema extraction
-* Schema-aware prompting
-
----
-
-### 3️⃣ SQL Extraction Issues
-
-**Solution:**
-
-* Custom parsing for handling CTEs and multiline queries
+| Feature | Implementation |
+|---------|---------------|
+| **Redis Caching** | Table-scoped query cache with 5-min TTL |
+| **Cache Invalidation** | Auto-flush on new dataset upload |
+| **Rate Limiting** | 5 req/min per IP via SlowAPI |
+| **Async Backend** | FastAPI with async endpoints |
+| **LLM Timeouts** | 15-60s timeouts with smart fallbacks |
+| **Context Limiting** | Max 20 rows stored for follow-ups |
 
 ---
 
-### 4️⃣ Performance Bottlenecks
+## 🛡️ Security
 
-**Solution:**
+- **Read-only SQL** — DROP, DELETE, UPDATE, INSERT, ALTER, TRUNCATE are blocked
+- **Schema enforcement** — AI-generated SQL is validated against actual column names
+- **Rate limiting** — Prevents API abuse
+- **CORS configured** — Controlled cross-origin access
+- **No model identity leakage** — LLM never reveals its underlying model
 
-* Caching layer ⚡
-* Efficient model/runtime configuration
+---
+
+## 🐳 Docker Services
+
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| `frontend` | Node 18 → Nginx | 3000 | React SPA |
+| `backend` | Python 3.11 | 8000 | FastAPI API |
+| `postgres` | PostgreSQL 16 | 5432 | Data storage |
+| `redis` | Redis 7 | 6379 | Query caching |
+| `ollama` | *(host)* | 11434 | LLM inference |
 
 ---
 
 ## 🚀 Future Enhancements
 
-* Multi-table joins and relationship inference
-* Query explanation (natural language breakdown of SQL)
-* Streaming responses (real-time output generation 💬)
-* Role-based authentication 🔐
-* Dashboard visualizations (charts & analytics 📊)
-* Support for multiple database systems
-
----
-
-## 🎯 Conclusion
-
-AskDB demonstrates how modern AI systems can be integrated with traditional database technologies to create intuitive and powerful data interfaces.
-
-By combining:
-
-* Natural language processing 🧠
-* Backend engineering ⚙️
-* Performance optimization ⚡
-
-the platform provides a scalable and production-ready solution for intelligent data querying.
-
-This project reflects a **real-world SaaS-oriented AI system design**, emphasizing correctness, performance, and usability 💯.
+- Multi-table joins and relationship inference
+- Streaming LLM responses (real-time typing effect)
+- Role-based authentication
+- Dashboard visualizations (charts & analytics)
+- Support for multiple database systems
+- Persistent conversation history (database-backed)
+- File format support beyond CSV (Excel, JSON)
 
 ---
 
 ## ⭐ Support
 
-If you find this project useful, consider giving it a ⭐ on GitHub — it helps a lot!
+If you find this project useful, consider giving it a ⭐ on GitHub!
 
 ---
 
@@ -290,12 +293,8 @@ If you find this project useful, consider giving it a ⭐ on GitHub — it helps
 
 © 2026 Deepak Shinde. All rights reserved.
 
-This project is developed and maintained as part of a professional portfolio. Unauthorized copying, redistribution, or commercial use of this project without permission is prohibited.
-
-For collaborations, queries, or opportunities, feel free to reach out:
+This project is developed and maintained as part of a professional portfolio.
 
 **Deepak Shinde**
 AI/ML Engineer
 📧 Email: [deep1904s@gmail.com](mailto:deep1904s@gmail.com)
-
----

@@ -1,65 +1,49 @@
 version: "3.8"
 
 services:
-  # ── PostgreSQL Database ──
+
   postgres:
     image: postgres:16-alpine
-    container_name: askdb-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: deepak
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mindsql_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U deepak -d mindsql_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # ── Redis Cache ──
   redis:
     image: redis:7-alpine
-    container_name: askdb-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
-  # ── Backend (FastAPI) ──
   backend:
     build: ./backend
-    container_name: askdb-backend
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://deepak:password@postgres:5432/mindsql_db
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_HOST: redis
-      OLLAMA_URL: http://host.docker.internal:11434/api/generate
-      MODEL_NAME: qwen2.5-coder:7b
+      OLLAMA_URL: ${OLLAMA_URL}
+      MODEL_NAME: ${MODEL_NAME}
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - postgres
+      - redis
 
-  # ── Frontend (React + Nginx) ──
   frontend:
     build:
       context: ./frontend
       args:
         REACT_APP_API_URL: ""
-    container_name: askdb-frontend
     restart: unless-stopped
     ports:
       - "3000:80"
